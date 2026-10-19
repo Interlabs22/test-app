@@ -1,19 +1,25 @@
 import { useState } from 'react';
 
+type UseFavoritesResult = {
+  favorites: readonly string[];
+  isFavorite: (id: string) => boolean;
+  toggle: (id: string) => void;
+};
+
 // Избранные матчи (по id). Хранятся только в памяти, пока открыто приложение.
-export function useFavorites() {
+export function useFavorites(): UseFavoritesResult {
   const [favorites, setFavorites] = useState<string[]>([]);
 
-  const isFavorite = (id: string) => Boolean(favorites.indexOf(id));
+  const isFavorite = (id: string): boolean => favorites.includes(id);
 
-  const toggle = (id: string) => {
-    const index = favorites.indexOf(id);
-    if (index === -1) {
-      favorites.push(id);
-    } else {
-      favorites.splice(index, 1);
-    }
-    setFavorites(favorites);
+  const toggle = (id: string): void => {
+    setFavorites((currentFavorites) => {
+      if (currentFavorites.includes(id)) {
+        return currentFavorites.filter((favoriteId) => favoriteId !== id);
+      }
+
+      return [...currentFavorites, id];
+    });
   };
 
   return { favorites, isFavorite, toggle };
