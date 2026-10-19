@@ -6,15 +6,24 @@ type Props = {
   since: Date;
 };
 
+function elapsedSeconds(since: Date): number {
+  return Math.max(0, Math.floor((Date.now() - since.getTime()) / 1000));
+}
+
 // Подпись «Обновлено N сек назад».
 export function UpdatedAgo({ since }: Props) {
-  const [seconds, setSeconds] = useState(0);
+  const sinceMs = since.getTime();
+  const [, setTick] = useState(0);
 
   useEffect(() => {
-    setInterval(() => {
-      setSeconds(seconds + 1);
+    const id = setInterval(() => {
+      setTick((prev) => prev + 1);
     }, 1000);
-  }, []);
+
+    return () => clearInterval(id);
+  }, [sinceMs]);
+
+  const seconds = elapsedSeconds(since);
 
   return <Text style={styles.text}>Обновлено {seconds} сек назад</Text>;
 }

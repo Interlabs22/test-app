@@ -48,8 +48,6 @@ export function Matches() {
     void refetch();
   }, [refetch]);
 
-  const lastUpdated = dataUpdatedAt ? new Date(dataUpdatedAt) : new Date();
-
   if (isPending) {
     return (
       <YStack flex={1} alignItems="center" justifyContent="center" gap={12}>
@@ -98,11 +96,12 @@ export function Matches() {
           borderColor={colors.border}
           color={colors.textPrimary}
         >
-          {isRefetching ? 'Обновление…' : 'Обновить'}
+          {isRefetching && 'Обновление…'}
+          {!isRefetching && 'Обновить'}
         </Button>
       </XStack>
 
-      <UpdatedAgo since={lastUpdated} />
+      <UpdatedAgo since={new Date(dataUpdatedAt)} />
 
       <XStack
         width="100%"
@@ -141,19 +140,23 @@ export function Matches() {
         </Button>
       </XStack>
 
-      {isEmptySource ? (
+      {isEmptySource && (
         <YStack flex={1} alignItems="center" justifyContent="center" padding={16}>
           <Text fontSize={18} color={colors.textSecondary} textAlign="center">
             В этом туре пока нет матчей
           </Text>
         </YStack>
-      ) : isEmptyFiltered ? (
+      )}
+
+      {!isEmptySource && isEmptyFiltered && (
         <YStack flex={1} alignItems="center" justifyContent="center" padding={16}>
           <Text fontSize={18} color={colors.textSecondary} textAlign="center">
             Нет матчей для выбранного фильтра
           </Text>
         </YStack>
-      ) : (
+      )}
+
+      {!isEmptySource && !isEmptyFiltered && (
         <ScrollView
           flex={1}
           showsVerticalScrollIndicator={false}
