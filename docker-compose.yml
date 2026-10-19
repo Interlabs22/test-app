@@ -1,0 +1,43 @@
+x-dev-template: &dev-template
+  build:
+    context: .
+    target: base
+  volumes:
+    - .:/app
+    - /app/node_modules    # Изолирует только node_modules. Никаких других папок-призраков!
+  ports:
+    - "8081:8081"
+  stdin_open: true
+  tty: true
+  environment:
+    - CI=1
+    - EXPO_NO_BROWSER=1
+    - HOME=/home/dev                    # Домашняя папка Cursor и Expo (все .cache, .expo уходят сюда)
+    - npm_config_cache=/home/dev/.npm   # <-- ВЕСЬ КЭШ NPM уходит сюда же и не забивает /app
+
+services:
+
+  start:
+    <<: *dev-template
+    command: npm run start
+
+  web:
+    <<: *dev-template
+    command: npm run web
+
+  typecheck:
+    build:
+      context: .
+      target: base
+    volumes:
+      - .:/app
+      - /app/node_modules
+    command: npm run typecheck
+
+  prod-web:
+    build:
+      context: .
+      target: production
+    ports:
+      - "8080:80"
+

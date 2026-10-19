@@ -1,4 +1,2 @@
-// Данные матчей — файл data/matches.json из этого репозитория, отданный по HTTP.
-// Адрес менять не нужно.
-export const MATCHES_URL =
-  'https://raw.githubusercontent.com/OWNER/REPO/main/data/matches.json';
+// Базовый URL API — из .env (EXPO_PUBLIC_API_URL), см. src/api/fetcher.ts.
+export const API_URL = process.env.EXPO_PUBLIC_API_URL ?? '';

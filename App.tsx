@@ -1,6 +1,6 @@
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, View } from 'react-native';
-import { MatchesScreen } from './src/screens/MatchesScreen';
+import { MatchesScreen } from './src/screens/Matches';
 
 export default function App() {
   return (
