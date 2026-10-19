@@ -16,6 +16,7 @@ import {
   matchFilterOptions,
   useFilteredMatches,
 } from '../../hooks/useFilteredMatches';
+import { useFavorites } from '../../hooks/useFavorites';
 import { useMatchesQuery } from '../../hooks/useMatchesQuery';
 import { useAppColors } from '../../providers/AppThemeProvider';
 import { MatchCard } from './components/MatchCard';
@@ -43,6 +44,8 @@ export function Matches() {
     isEmptySource,
     isEmptyFiltered,
   } = useFilteredMatches(data?.matches);
+
+  const { isFavorite, toggle } = useFavorites();
 
   const onRefresh = useCallback(() => {
     void refetch();
@@ -170,7 +173,12 @@ export function Matches() {
           }
         >
           {filteredMatches.map((match) => (
-            <MatchCard key={match.id} match={match} />
+            <MatchCard
+              key={match.id}
+              match={match}
+              favoriteActive={isFavorite(match.id)}
+              onToggleFavorite={() => toggle(match.id)}
+            />
           ))}
         </ScrollView>
       )}

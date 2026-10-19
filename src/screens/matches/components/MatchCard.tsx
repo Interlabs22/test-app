@@ -1,6 +1,7 @@
 import { Text, XStack, YStack } from 'tamagui';
 
 import type { IMatch } from '../../../api/types';
+import { FavoriteButton } from '../../../components/FavoriteButton';
 import {
   formatMatchStart,
   formatScore,
@@ -10,9 +11,15 @@ import { useAppColors } from '../../../providers/AppThemeProvider';
 
 type Props = {
   match: IMatch;
+  favoriteActive: boolean;
+  onToggleFavorite: () => void;
 };
 
-export function MatchCard({ match }: Props) {
+export function MatchCard({
+  match,
+  favoriteActive,
+  onToggleFavorite,
+}: Props) {
   const colors = useAppColors();
   const score = formatScore(match);
 
@@ -34,15 +41,19 @@ export function MatchCard({ match }: Props) {
             {match.away.name}
           </Text>
         </YStack>
-        {score != null ? (
-          <Text fontSize={22} fontWeight="700" color={colors.score}>
-            {score}
-          </Text>
-        ) : (
-          <Text fontSize={16} color={colors.textMuted}>
-            —
-          </Text>
-        )}
+        <XStack alignItems="flex-start" gap={8}>
+          {score != null && (
+            <Text fontSize={22} fontWeight="700" color={colors.score}>
+              {score}
+            </Text>
+          )}
+          {score == null && (
+            <Text fontSize={16} color={colors.textMuted}>
+              —
+            </Text>
+          )}
+          <FavoriteButton active={favoriteActive} onPress={onToggleFavorite} />
+        </XStack>
       </XStack>
       <XStack
         marginTop={12}
