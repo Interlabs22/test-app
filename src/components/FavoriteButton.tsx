@@ -1,20 +1,27 @@
+import type { ReactElement } from 'react';
 import { Pressable, StyleSheet, Text } from 'react-native';
 
-type Props = {
+type FavoriteButtonProps = {
   active: boolean;
+  disabled: boolean;
   onPress: () => void;
 };
 
-// Звёздочка «в избранное».
-export function FavoriteButton({ active, onPress }: Props) {
+export function FavoriteButton({
+  active,
+  disabled,
+  onPress,
+}: FavoriteButtonProps): ReactElement {
   return (
     <Pressable
+      disabled={disabled}
       onPress={onPress}
       hitSlop={12}
       accessibilityRole="button"
       accessibilityLabel={active ? 'Убрать из избранного' : 'Добавить в избранное'}
+      accessibilityState={{ disabled, selected: active }}
     >
-      <Text style={[styles.star, active && styles.active]}>{active ? '★' : '☆'}</Text>
+      <Text style={[styles.star, active ? styles.active : null]}>{active ? '★' : '☆'}</Text>
     </Pressable>
   );
 }
