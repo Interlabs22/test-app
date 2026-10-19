@@ -1,20 +1,27 @@
-import { useEffect, useState } from 'react';
+import { type ReactElement, useEffect, useState } from 'react';
 import { StyleSheet, Text } from 'react-native';
 
-type Props = {
+type UpdatedAgoProps = {
   // Момент последней успешной загрузки данных.
   since: Date;
 };
 
 // Подпись «Обновлено N сек назад».
-export function UpdatedAgo({ since }: Props) {
-  const [seconds, setSeconds] = useState(0);
+export function UpdatedAgo({ since }: UpdatedAgoProps): ReactElement {
+  const [currentTimestamp, setCurrentTimestamp] = useState(() => Date.now());
 
   useEffect(() => {
-    setInterval(() => {
-      setSeconds(seconds + 1);
-    }, 1000);
-  }, []);
+    const updateCurrentTimestamp = (): void => {
+      setCurrentTimestamp(Date.now());
+    };
+
+    updateCurrentTimestamp();
+    const intervalId = setInterval(updateCurrentTimestamp, 1000);
+
+    return () => clearInterval(intervalId);
+  }, [since]);
+
+  const seconds = Math.max(0, Math.floor((currentTimestamp - since.getTime()) / 1000));
 
   return <Text style={styles.text}>Обновлено {seconds} сек назад</Text>;
 }
