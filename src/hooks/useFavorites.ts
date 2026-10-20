@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { z } from 'zod';
 
 const favoritesStorageKey = 'favorite-match-ids';
@@ -22,6 +22,7 @@ function parseFavoriteIds(serializedFavoriteIds: string): string[] {
 export function useFavorites(): UseFavoritesResult {
   const [favorites, setFavorites] = useState<string[]>([]);
   const [isReady, setIsReady] = useState(false);
+  const saveQueueRef = useRef<Promise<void>>(Promise.resolve());
 
   useEffect(() => {
     let isMounted = true;
@@ -52,16 +53,13 @@ export function useFavorites(): UseFavoritesResult {
   }, []);
 
   useEffect(() => {
-    const saveFavorites = async (): Promise<void> => {
-      try {
-        await AsyncStorage.setItem(favoritesStorageKey, JSON.stringify(favorites));
-      } catch {
-        return;
-      }
-    };
-
     if (isReady) {
-      void saveFavorites();
+      const serializedFavoriteIds = JSON.stringify(favorites);
+
+      saveQueueRef.current = saveQueueRef.current
+        .catch(() => undefined)
+        .then(() => AsyncStorage.setItem(favoritesStorageKey, serializedFavoriteIds))
+        .catch(() => undefined);
     }
   }, [favorites, isReady]);
 
