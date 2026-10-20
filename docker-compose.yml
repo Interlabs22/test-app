@@ -1,0 +1,69 @@
+# Тома dev-сервисов: исходники с хоста, артефаты и кэши только в Docker.
+x-dev-volumes: &dev-volumes
+  - .:/app
+  - /app/node_modules
+  - /app/.expo
+  - /app/.tamagui
+  - dev-home:/home/dev
+
+x-dev-environment: &dev-environment
+  EXPO_NO_BROWSER: "1"
+  EXPO_DEVTOOLS_LISTEN_ADDRESS: "0.0.0.0"
+  HOME: /home/dev
+  npm_config_cache: /home/dev/.npm
+  # Браузер на хосте ходит через проброс порта 8081
+  REACT_NATIVE_PACKAGER_HOSTNAME: localhost
+  # CI=true отключает Metro watch — для разработки не используем
+  CI: "false"
+  # Надёжный HMR при bind-mount (Dev Container / Docker Desktop)
+  CHOKIDAR_USEPOLLING: "true"
+  WATCHPACK_POLLING: "true"
+
+x-dev-template: &dev-template
+  build:
+    context: .
+    target: base
+  volumes: *dev-volumes
+  ports:
+    - "8081:8081"
+    - "19000:19000"
+    - "19001:19001"
+    - "19002:19002"
+  stdin_open: true
+  tty: true
+  environment: *dev-environment
+
+services:
+  # Основной сервис для Cursor Dev Containers (Reopen in Container)
+  dev:
+    <<: *dev-template
+    command: sleep infinity
+
+  start:
+    <<: *dev-template
+    command: npm run start
+
+  web:
+    <<: *dev-template
+    command: npm run web
+
+  typecheck:
+    build:
+      context: .
+      target: base
+    volumes: *dev-volumes
+    environment:
+      HOME: /home/dev
+      npm_config_cache: /home/dev/.npm
+      CI: "true"
+    command: npm run typecheck
+
+  prod-web:
+    build:
+      context: .
+      target: production
+    ports:
+      - "8080:80"
+
+volumes:
+  dev-home:
