@@ -1,4 +1,3 @@
-// Данные матчей — файл data/matches.json из этого репозитория, отданный по HTTP.
-// Адрес менять не нужно.
+// Tour matches served from data/matches.json in this repository.
 export const MATCHES_URL =
-  'https://raw.githubusercontent.com/OWNER/REPO/main/data/matches.json';
+  'https://raw.githubusercontent.com/aleksey-kerkin/test-app-inter-lab/main/data/matches.json';
