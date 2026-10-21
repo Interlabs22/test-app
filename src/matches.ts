@@ -1,13 +1,18 @@
 import type { Match, MatchFilter } from './types';
 
+function hasKickoff(match: Match): boolean {
+  return typeof match.startsAt === 'string' && match.startsAt.length > 0 && !Number.isNaN(new Date(match.startsAt).getTime());
+}
+
 export function filterMatches(matches: Match[], filter: MatchFilter): Match[] {
   if (filter === 'upcoming') {
-    return matches.filter((match) => match.status === 'scheduled');
+    const upcoming = matches.filter((match) => match.status === 'scheduled' || match.status === 'postponed');
+    return [...upcoming.filter(hasKickoff), ...upcoming.filter((match) => !hasKickoff(match))];
   }
   if (filter === 'finished') {
     return matches.filter((match) => match.status === 'finished');
   }
-  return matches;
+  return [...matches.filter((match) => match.status === 'live'), ...matches.filter((match) => match.status !== 'live')];
 }
 
 export function formatScore(match: Match): string | null {
