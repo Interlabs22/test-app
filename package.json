@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "main": "index.ts",
   "dependencies": {
+    "@react-native-async-storage/async-storage": "2.2.0",
     "expo": "~57.0.29",
     "expo-status-bar": "~57.0.1",
     "react": "19.2.3",
@@ -11,7 +12,9 @@
     "react-native-web": "^0.21.2"
   },
   "devDependencies": {
+    "@types/node": "^26.6.5",
     "@types/react": "~19.2.2",
+    "tsx": "^4.23.15",
     "typescript": "~6.0.3"
   },
   "scripts": {
@@ -19,7 +22,8 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "node --import tsx --test src/matches.test.ts"
   },
   "private": true
 }
