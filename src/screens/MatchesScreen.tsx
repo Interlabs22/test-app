@@ -1,14 +1,23 @@
 import type { ReactNode } from 'react';
 import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { FilterTabs } from '../components/FilterTabs';
 import { MatchCard } from '../components/MatchCard';
+import { useMatchFilter } from '../hooks/useMatchFilter';
 import { useMatches } from '../hooks/useMatches';
 import type { Match } from '../types/match';
 
 const renderItem = ({ item }: { item: Match }) => <MatchCard match={item} />;
 
+// Стабильная ссылка: иначе useMemo внутри useMatchFilter пересчитывался бы
+// на каждом рендере, пока данных ещё нет.
+const NO_MATCHES: Array<Match> = [];
+
 export function MatchesScreen() {
   const state = useMatches();
+
+  const all = state.status === 'success' ? state.matches : NO_MATCHES;
+  const { filter, setFilter, visible, emptyText } = useMatchFilter(all);
 
   let body: ReactNode;
 
@@ -27,16 +36,16 @@ export function MatchesScreen() {
         </Pressable>
       </View>
     );
-  } else if (state.matches.length === 0) {
+  } else if (visible.length === 0) {
     body = (
       <View style={[styles.statusBox, styles.centered]}>
-        <Text style={styles.emptyText}>Матчей нет</Text>
+        <Text style={styles.emptyText}>{emptyText}</Text>
       </View>
     );
   } else {
     body = (
       <FlatList
-        data={state.matches}
+        data={visible}
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
       />
@@ -52,6 +61,8 @@ export function MatchesScreen() {
         )}
       </View>
 
+      {state.status === 'success' && <FilterTabs value={filter} onChange={setFilter} />}
+
       {body}
     </View>
   );
@@ -65,7 +76,6 @@ const styles = StyleSheet.create({
     padding: 16,
     backgroundColor: '#fff',
   },
-  // Занимает остаток высоты под шапкой и центрирует содержимое.
   statusBox: {
     flex: 1,
   },
