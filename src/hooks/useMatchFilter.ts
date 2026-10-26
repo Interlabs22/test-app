@@ -23,16 +23,31 @@ const EMPTY_LABELS: Record<MatchFilter, string> = {
 // Фильтр строится по status
 // live попадает в предстоящие: матч ещё не завершён.
 // postponed остаётся только во «Все»: даты нет, результата тоже нет.
-export function filterMatches(matches: Array<Match>, filter: MatchFilter): Array<Match> {
+// Поиск идёт по названиям обоих клубов и применяется вместе с фильтром.
+export function filterMatches(
+  matches: Array<Match>,
+  filter: MatchFilter,
+  query = '',
+): Array<Match> {
+  const needle = query.trim().toLowerCase();
+
+  const found = needle
+    ? matches.filter(
+        (m) =>
+          m.home.name.toLowerCase().includes(needle) ||
+          m.away.name.toLowerCase().includes(needle),
+      )
+    : matches;
+
   if (filter === 'upcoming') {
-    return matches.filter((m) => m.status === 'scheduled' || m.status === 'live');
+    return found.filter((m) => m.status === 'scheduled' || m.status === 'live');
   }
 
   if (filter === 'finished') {
-    return matches.filter((m) => m.status === 'finished');
+    return found.filter((m) => m.status === 'finished');
   }
-  
-  return matches;
+
+  return found;
 }
 
 export function filterLabel(filter: MatchFilter): string {
@@ -41,10 +56,21 @@ export function filterLabel(filter: MatchFilter): string {
 
 export function useMatchFilter(all: Array<Match>) {
   const [filter, setFilter] = useState<MatchFilter>('all');
+  const [query, setQuery] = useState('');
 
-  const visible = useMemo(() => filterMatches(all, filter), [all, filter]);
+  const visible = useMemo(
+    () => filterMatches(all, filter, query),
+    [all, filter, query],
+  );
 
-  const emptyText = all.length === 0 ? EMPTY_LABELS.all : EMPTY_LABELS[filter];
+  // Пустой сервер, пустая вкладка и пустой поиск — три разные причины.
+  let emptyText = EMPTY_LABELS[filter];
 
-  return { filter, setFilter, visible, emptyText };
+  if (all.length === 0) {
+    emptyText = EMPTY_LABELS.all;
+  } else if (query.trim()) {
+    emptyText = `Ничего не найдено по запросу «${query.trim()}»`;
+  }
+
+  return { filter, setFilter, query, setQuery, visible, emptyText };
 }

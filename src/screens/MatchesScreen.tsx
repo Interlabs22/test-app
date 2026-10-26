@@ -3,6 +3,7 @@ import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from '
 
 import { FilterTabs } from '../components/FilterTabs';
 import { MatchCard } from '../components/MatchCard';
+import { SearchField } from '../components/SearchField';
 import { UpdatedAgo } from '../components/UpdatedAgo';
 import { useFavorites } from '../hooks/useFavorites';
 import { useMatchFilter } from '../hooks/useMatchFilter';
@@ -18,7 +19,7 @@ export function MatchesScreen() {
   const { isFavorite, toggle } = useFavorites();
 
   const all = state.status === 'success' ? state.matches : NO_MATCHES;
-  const { filter, setFilter, visible, emptyText } = useMatchFilter(all);
+  const { filter, setFilter, query, setQuery, visible, emptyText } = useMatchFilter(all);
 
   const renderItem = useCallback(
     ({ item }: { item: Match }) => (
@@ -86,6 +87,8 @@ export function MatchesScreen() {
             </Pressable>
           </View>
 
+          <SearchField value={query} onChange={setQuery} />
+
           <FilterTabs value={filter} onChange={setFilter} />
         </>
       )}
@@ -94,8 +97,6 @@ export function MatchesScreen() {
     </View>
   );
 }
-
-/* ---------- стили ---------- */
 
 const styles = StyleSheet.create({
   container: {
