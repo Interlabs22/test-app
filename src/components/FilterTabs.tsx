@@ -35,14 +35,18 @@ export function FilterTabs({ value, onChange }: Props) {
 const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
-    justifyContent: 'center',
+    width: '100%',
+    maxWidth: 480,
+    alignSelf: 'center',
     marginBottom: 12,
+    gap: 8,
   },
   tab: {
+    flex: 1,
     paddingVertical: 8,
-    paddingHorizontal: 14,
+    paddingHorizontal: 8,
     borderRadius: 6,
-    marginHorizontal: 4,
+    alignItems: 'center',
   },
   tabActive: {
     backgroundColor: '#f3f4f6',
@@ -51,6 +55,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '500',
     color: '#6b7280',
+    textAlign: 'center',
   },
   labelActive: {
     color: '#111827',
