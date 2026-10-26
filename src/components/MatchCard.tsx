@@ -2,20 +2,27 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { formatDate, formatScore, statusLabel } from '../helpers/matchFormat';
 import type { Match } from '../types/match';
+import { FavoriteButton } from './FavoriteButton';
 
 type Props = {
   match: Match;
+  favorite: boolean;
+  onToggleFavorite: () => void;
 };
 
 // Карточка матча: команды, счёт (если он есть), дата в поясе устройства и статус.
-export function MatchCard({ match }: Props) {
+export function MatchCard({ match, favorite, onToggleFavorite }: Props) {
   const score = formatScore(match);
 
   return (
     <View style={styles.card}>
-      <Text style={styles.teams} numberOfLines={2}>
-        {match.home.name} — {match.away.name}
-      </Text>
+      <View style={styles.topRow}>
+        <Text style={styles.teams} numberOfLines={2}>
+          {match.home.name} — {match.away.name}
+        </Text>
+
+        <FavoriteButton active={favorite} onPress={onToggleFavorite} />
+      </View>
 
       {score != null && <Text style={styles.score}>{score}</Text>}
 
@@ -37,10 +44,17 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     marginBottom: 8,
   },
+  topRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+  },
   teams: {
     fontSize: 15,
     fontWeight: '500',
     flexShrink: 1,
+    flexGrow: 1,
+    paddingRight: 8,
   },
   score: {
     fontSize: 15,

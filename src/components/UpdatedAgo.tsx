@@ -6,15 +6,27 @@ type Props = {
   since: Date;
 };
 
+// Считаем от since, а не накапливаем счётчик: 
+// так подпись всегда честная,
+// даже если таймер сработал с задержкой.
+const secondsSince = (since: Date) =>
+  Math.max(0, Math.floor((Date.now() - since.getTime()) / 1000));
+
 // Подпись «Обновлено N сек назад».
 export function UpdatedAgo({ since }: Props) {
-  const [seconds, setSeconds] = useState(0);
+  const [seconds, setSeconds] = useState(() => secondsSince(since));
 
   useEffect(() => {
-    setInterval(() => {
-      setSeconds(seconds + 1);
+    // Новый since — новый отсчёт (например, после «Обновить»).
+    setSeconds(secondsSince(since));
+
+    const id = setInterval(() => {
+      setSeconds(secondsSince(since));
     }, 1000);
-  }, []);
+
+    // Без cleanup интервалы копятся при каждом перемонтировании.
+    return () => clearInterval(id);
+  }, [since]);
 
   return <Text style={styles.text}>Обновлено {seconds} сек назад</Text>;
 }

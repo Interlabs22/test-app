@@ -1,13 +1,13 @@
-import type { ReactNode } from 'react';
+import { useCallback, type ReactNode } from 'react';
 import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { FilterTabs } from '../components/FilterTabs';
 import { MatchCard } from '../components/MatchCard';
+import { UpdatedAgo } from '../components/UpdatedAgo';
+import { useFavorites } from '../hooks/useFavorites';
 import { useMatchFilter } from '../hooks/useMatchFilter';
 import { useMatches } from '../hooks/useMatches';
 import type { Match } from '../types/match';
-
-const renderItem = ({ item }: { item: Match }) => <MatchCard match={item} />;
 
 // Стабильная ссылка: иначе useMemo внутри useMatchFilter пересчитывался бы
 // на каждом рендере, пока данных ещё нет.
@@ -15,9 +15,21 @@ const NO_MATCHES: Array<Match> = [];
 
 export function MatchesScreen() {
   const state = useMatches();
+  const { isFavorite, toggle } = useFavorites();
 
   const all = state.status === 'success' ? state.matches : NO_MATCHES;
   const { filter, setFilter, visible, emptyText } = useMatchFilter(all);
+
+  const renderItem = useCallback(
+    ({ item }: { item: Match }) => (
+      <MatchCard
+        match={item}
+        favorite={isFavorite(item.id)}
+        onToggleFavorite={() => toggle(item.id)}
+      />
+    ),
+    [isFavorite, toggle],
+  );
 
   let body: ReactNode;
 
@@ -61,7 +73,22 @@ export function MatchesScreen() {
         )}
       </View>
 
-      {state.status === 'success' && <FilterTabs value={filter} onChange={setFilter} />}
+      {state.status === 'success' && (
+        <>
+          <View style={styles.toolbar}>
+            <UpdatedAgo since={state.since} />
+            <Pressable
+              onPress={state.refresh}
+              accessibilityRole="button"
+              style={styles.refreshButton}
+            >
+              <Text style={styles.refreshText}>Обновить</Text>
+            </Pressable>
+          </View>
+
+          <FilterTabs value={filter} onChange={setFilter} />
+        </>
+      )}
 
       {body}
     </View>
@@ -97,6 +124,26 @@ const styles = StyleSheet.create({
     color: '#6b7280',
     marginTop: 2,
     textAlign: 'center',
+  },
+  toolbar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    maxWidth: 480,
+    width: '100%',
+    alignSelf: 'center',
+    marginBottom: 12,
+  },
+  refreshButton: {
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 6,
+    backgroundColor: '#f3f4f6',
+  },
+  refreshText: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: '#111827',
   },
   errorText: {
     fontSize: 15,
