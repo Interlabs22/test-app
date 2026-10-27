@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { formatDate, formatScore, statusLabel } from '../helpers/matchFormat';
@@ -7,11 +8,11 @@ import { FavoriteButton } from './FavoriteButton';
 type Props = {
   match: Match;
   favorite: boolean;
-  onToggleFavorite: () => void;
+  onToggleFavorite: (id: string) => void;
 };
 
 // Карточка матча: команды, счёт (если он есть), дата в поясе устройства и статус.
-export function MatchCard({ match, favorite, onToggleFavorite }: Props) {
+export const MatchCard = memo(({ match, favorite, onToggleFavorite }: Props) => {
   const score = formatScore(match);
 
   return (
@@ -21,7 +22,7 @@ export function MatchCard({ match, favorite, onToggleFavorite }: Props) {
           {match.home.name} — {match.away.name}
         </Text>
 
-        <FavoriteButton active={favorite} onPress={onToggleFavorite} />
+        <FavoriteButton active={favorite} onPress={() => onToggleFavorite(match.id)} />
       </View>
 
       {score != null && <Text style={styles.score}>{score}</Text>}
@@ -32,7 +33,7 @@ export function MatchCard({ match, favorite, onToggleFavorite }: Props) {
       </View>
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   card: {

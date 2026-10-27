@@ -2,18 +2,26 @@ import { useCallback, useState } from 'react';
 
 // Избранные матчи (по id). Хранятся только в памяти, пока открыто приложение.
 export function useFavorites() {
-  const [favorites, setFavorites] = useState<Array<string>>([]);
+  // Set вместо массива: проверка наличия — O(1) вместо O(n), и «набор id»
+  // семантически именно множество, а не последовательность.
+  const [favorites, setFavorites] = useState<Set<string>>(new Set());
 
-  // indexOf возвращает индекс, а не признак наличия: 
-  // 0 — «не избран», -1 — «избран». Поэтому именно includes.
-  const isFavorite = useCallback((id: string) => favorites.includes(id), [favorites]);
+  const isFavorite = useCallback((id: string) => favorites.has(id), [favorites]);
 
-  // Новый массив вместо мутации: push/splice меняют тот же ref, и React
-  // не видит изменений, потому что сравнивает ссылки.
+  // Новый Set вместо prev.add/prev.delete: мутация оставляет ту же ссылку,
+  // и React не видит изменений, потому что сравнивает ссылки.
   const toggle = useCallback((id: string) => {
-    setFavorites((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
-    );
+    setFavorites((prev) => {
+      const next = new Set(prev);
+
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+
+      return next;
+    });
   }, []);
 
   return { favorites, isFavorite, toggle };

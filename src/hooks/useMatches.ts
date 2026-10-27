@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { MATCHES_URL } from '../config';
+import { isNullish } from '../helpers/typeGuards';
+import type { Nullable } from '../types/basic';
 import type { ApiResponse, Match } from '../types/match';
 
 type LoadState =
@@ -11,9 +13,11 @@ type LoadState =
 
 export function useMatches() {
   const [state, setState] = useState<LoadState>({ status: 'idle' });
-  const controllerRef = useRef<AbortController | null>(null);
+  const controllerRef = useRef<Nullable<AbortController>>(null);
 
-  const refresh = useCallback(() => {
+  const refresh = useCallback(async () => {
+    // Повторный запрос отменяет предыдущий, иначе поздний ответ
+    // перезапишет более свежий.
     controllerRef.current?.abort();
 
     setState({ status: 'loading' });
@@ -22,33 +26,34 @@ export function useMatches() {
 
     controllerRef.current = controller;
 
-    fetch(MATCHES_URL, { signal: controller.signal })
-      .then(res => {
-        if (!res.ok) {
-          throw new Error(`HTTP ${res.status}`);
-        }
+    try {
+      const res = await fetch(MATCHES_URL, { signal: controller.signal });
 
-        return res.json();
-      })
-      .then((raw: unknown) => {
-        const api = raw as ApiResponse;
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}`);
+      }
 
-        if (!api || !Array.isArray(api.matches)) {
-          throw new Error('Неверный формат данных');
-        }
-        
-        setState({
-          status: 'success',
-          matches: api.matches,
-          round: api.round,
-          since: new Date(),
-        });
-      })
-      .catch((err: Error) => {
-        if (err.name !== 'AbortError') {
-          setState({ status: 'error', message: err.message });
-        }
+      const raw: unknown = await res.json();
+      const api = raw as ApiResponse;
+
+      if (isNullish(api) || !Array.isArray(api.matches)) {
+        throw new Error('Неверный формат данных');
+      }
+
+      setState({
+        status: 'success',
+        matches: api.matches,
+        round: api.round,
+        since: new Date(),
       });
+    } catch (err) {
+      const error = err as Error;
+
+      // Отменённый запрос — не ошибка: пользователь нажал «Обновить» снова.
+      if (error.name !== 'AbortError') {
+        setState({ status: 'error', message: error.message });
+      }
+    }
   }, []);
 
   useEffect(() => {

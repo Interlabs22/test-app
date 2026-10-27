@@ -1,5 +1,12 @@
 import { useCallback, type ReactNode } from 'react';
-import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import {
+  ActivityIndicator,
+  FlatList,
+  Pressable,
+  StyleSheet,
+  Text,
+  View
+} from 'react-native';
 
 import { FilterTabs } from '../components/FilterTabs';
 import { MatchCard } from '../components/MatchCard';
@@ -26,7 +33,7 @@ export function MatchesScreen() {
       <MatchCard
         match={item}
         favorite={isFavorite(item.id)}
-        onToggleFavorite={() => toggle(item.id)}
+        onToggleFavorite={toggle}
       />
     ),
     [isFavorite, toggle],

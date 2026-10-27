@@ -1,6 +1,7 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { MATCH_FILTERS, filterLabel, type MatchFilter } from '../hooks/useMatchFilter';
+import { FILTER_LABELS, MATCH_FILTERS } from '../constants';
+import type { MatchFilter } from '../types/match';
 
 type Props = {
   value: MatchFilter;
@@ -23,7 +24,7 @@ export function FilterTabs({ value, onChange }: Props) {
             style={[styles.tab, active && styles.tabActive]}
           >
             <Text style={[styles.label, active && styles.labelActive]}>
-              {filterLabel(filter)}
+              {FILTER_LABELS[filter]}
             </Text>
           </Pressable>
         );

@@ -1,32 +1,30 @@
-import type { Match, MatchStatus } from '../types/match';
+import { STATUS_LABELS } from '../constants';
+import type { Nullable } from '../types/basic';
+import type { Match } from '../types/match';
+import { isNullish } from './typeGuards';
 
-const STATUS_LABELS: Record<MatchStatus, string> = {
-  scheduled: 'Скоро',
-  live: 'Идёт матч',
-  finished: 'Завершён',
-  postponed: 'Перенесён',
-};
-
-export function statusLabel(m: Match): string {
-  if (m.status === 'live' && m.minute != null) {
-    return `Идёт матч · ${m.minute}′`;
+export function statusLabel({ status, minute }: Match): string {
+  if (status === 'live' && !isNullish(minute)) {
+    return `Идёт матч · ${minute}′`;
   }
-  
-  return STATUS_LABELS[m.status] ?? 'Статус неизвестен';
+
+  return STATUS_LABELS[status] ?? 'Статус неизвестен';
 }
 
-export function formatDate(m: Match): string {
-  if (!m.startsAt) {
+export function formatDate({ startsAt }: Match): string {
+  if (isNullish(startsAt)) {
     return 'Время уточняется';
   }
 
-  const d = new Date(m.startsAt);
+  const date = new Date(startsAt);
 
-  if (Number.isNaN(d.getTime())) {
+  // Пустая строка и мусор в поле даты попадают сюда:
+  // new Date("") даёт Invalid Date без исключения.
+  if (Number.isNaN(date.getTime())) {
     return 'Время уточняется';
   }
 
-  return d.toLocaleString('ru-RU', {
+  return date.toLocaleString('ru-RU', {
     day: '2-digit',
     month: '2-digit',
     hour: '2-digit',
@@ -34,6 +32,10 @@ export function formatDate(m: Match): string {
   });
 }
 
-export function formatScore(m: Match): string | null {
-  return m.score ? `${m.score.home}:${m.score.away}` : null;
+export function formatScore({ score }: Match): Nullable<string> {
+  if (isNullish(score)) {
+    return null;
+  }
+
+  return `${score.home}:${score.away}`;
 }

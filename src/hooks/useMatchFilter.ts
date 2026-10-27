@@ -1,24 +1,7 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
-import type { Match } from '../types/match';
-
-export const MATCH_FILTERS = ['all', 'upcoming', 'finished'] as const;
-
-export type MatchFilter = (typeof MATCH_FILTERS)[number];
-
-const FILTER_LABELS: Record<MatchFilter, string> = {
-  all: 'Все',
-  upcoming: 'Предстоящие',
-  finished: 'Завершённые',
-};
-
-// Пустой ответ сервера и пустая вкладка — разные сообщения: 
-// «Матчей нет» при работающем сервере вводило бы в заблуждение.
-const EMPTY_LABELS: Record<MatchFilter, string> = {
-  all: 'Матчей нет',
-  upcoming: 'Нет предстоящих матчей',
-  finished: 'Нет завершённых матчей',
-};
+import type { Nullable } from '../types/basic';
+import type { Match, MatchFilter } from '../types/match';
 
 // Фильтр строится по status
 // live попадает в предстоящие: матч ещё не завершён.
@@ -33,34 +16,57 @@ export function filterMatches(
 
   const found = needle
     ? matches.filter(
-        (m) =>
-          m.home.name.toLowerCase().includes(needle) ||
-          m.away.name.toLowerCase().includes(needle),
+        (match) =>
+          match.home.name.toLowerCase().includes(needle) ||
+          match.away.name.toLowerCase().includes(needle),
       )
     : matches;
 
   if (filter === 'upcoming') {
-    return found.filter((m) => m.status === 'scheduled' || m.status === 'live');
+    return found.filter((match) => match.status === 'scheduled' || match.status === 'live');
   }
 
   if (filter === 'finished') {
-    return found.filter((m) => m.status === 'finished');
+    return found.filter((match) => match.status === 'finished');
   }
 
   return found;
 }
 
-export function filterLabel(filter: MatchFilter): string {
-  return FILTER_LABELS[filter];
-}
+// Пустой ответ сервера и пустая вкладка — разные сообщения:
+// «Матчей нет» при работающем сервере вводило бы в заблуждение.
+const EMPTY_LABELS: Record<MatchFilter, string> = {
+  all: 'Матчей нет',
+  upcoming: 'Нет предстоящих матчей',
+  finished: 'Нет завершённых матчей',
+};
 
 export function useMatchFilter(all: Array<Match>) {
   const [filter, setFilter] = useState<MatchFilter>('all');
   const [query, setQuery] = useState('');
 
+  // Debounce: поле ввода мгновенное, а список пересчитывается после паузы
+  // 200 мс. Без этого filterMatches вызывался бы на каждый символ.
+  const [debouncedQuery, setDebouncedQuery] = useState('');
+  const timerRef = useRef<Nullable<ReturnType<typeof setTimeout>>>(null);
+
+  useEffect(() => {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+    }
+
+    timerRef.current = setTimeout(() => setDebouncedQuery(query), 200);
+    
+    return () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+      }
+    };
+  }, [query]);
+
   const visible = useMemo(
-    () => filterMatches(all, filter, query),
-    [all, filter, query],
+    () => filterMatches(all, filter, debouncedQuery),
+    [all, filter, debouncedQuery],
   );
 
   // Пустой сервер, пустая вкладка и пустой поиск — три разные причины.

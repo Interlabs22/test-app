@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { StyleSheet, Text } from 'react-native';
 
 type Props = {
@@ -6,7 +6,7 @@ type Props = {
   since: Date;
 };
 
-// Считаем от since, а не накапливаем счётчик: 
+// Считаем от since, а не накапливаем счётчик:
 // так подпись всегда честная,
 // даже если таймер сработал с задержкой.
 const secondsSince = (since: Date) =>
@@ -14,19 +14,27 @@ const secondsSince = (since: Date) =>
 
 // Подпись «Обновлено N сек назад».
 export function UpdatedAgo({ since }: Props) {
+  // sinceRef нужен, чтобы setInterval не захватывал устаревшее значение
+  // из замыкания: если бы он читал since из useEffect, то при каждом
+  // изменении since создавался бы новый интервал. С ref интервал читает
+  // актуальное значение без пересоздания.
+  const sinceRef = useRef(since);
   const [seconds, setSeconds] = useState(() => secondsSince(since));
 
+  // Обновляем ref при каждом новом since.
   useEffect(() => {
-    // Новый since — новый отсчёт (например, после «Обновить»).
+    sinceRef.current = since;
     setSeconds(secondsSince(since));
+  }, [since]);
 
+  // Один интервал на всё время жизни компонента.
+  useEffect(() => {
     const id = setInterval(() => {
-      setSeconds(secondsSince(since));
+      setSeconds(secondsSince(sinceRef.current));
     }, 1000);
 
-    // Без cleanup интервалы копятся при каждом перемонтировании.
     return () => clearInterval(id);
-  }, [since]);
+  }, []);
 
   return <Text style={styles.text}>Обновлено {seconds} сек назад</Text>;
 }
