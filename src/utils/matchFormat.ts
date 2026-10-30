@@ -37,6 +37,19 @@ export function formatScore(match: Match): string {
   return match.score ? `${match.score.home} : ${match.score.away}` : '– : –';
 }
 
+// Регистр и «ё» не важны: «цска», «Ахмат», «ахмат» — найдутся.
+function normalize(text: string): string {
+  return text.trim().toLocaleLowerCase('ru-RU').replace(/ё/g, 'е');
+}
+
+export function searchMatches(matches: Match[], query: string): Match[] {
+  const needle = normalize(query);
+  if (!needle) return matches;
+  return matches.filter(
+    (m) => normalize(m.home.name).includes(needle) || normalize(m.away.name).includes(needle),
+  );
+}
+
 // Live и перенесённые ещё не сыграны — считаем их предстоящими.
 // Неизвестные статусы видны только во «Все».
 export function filterMatches(matches: Match[], filter: MatchFilter): Match[] {

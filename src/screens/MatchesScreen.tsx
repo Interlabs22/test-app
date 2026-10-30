@@ -1,11 +1,24 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import {
+  ActivityIndicator,
+  FlatList,
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
 import { fetchMatches } from '../api/matches';
 import { MatchCard } from '../components/MatchCard';
 import { UpdatedAgo } from '../components/UpdatedAgo';
 import { useFavorites } from '../hooks/useFavorites';
 import type { MatchesResponse } from '../types/match';
-import { FILTER_LABELS, filterMatches, type MatchFilter } from '../utils/matchFormat';
+import {
+  FILTER_LABELS,
+  filterMatches,
+  searchMatches,
+  type MatchFilter,
+} from '../utils/matchFormat';
 
 const FILTERS: MatchFilter[] = ['all', 'upcoming', 'finished'];
 
@@ -22,6 +35,7 @@ export function MatchesScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<MatchFilter>('all');
+  const [query, setQuery] = useState('');
   const abortRef = useRef<AbortController | null>(null);
   const { favorites, isFavorite, toggle } = useFavorites();
 
@@ -51,9 +65,11 @@ export function MatchesScreen() {
   }, [load]);
 
   const visibleMatches = useMemo(
-    () => (data ? filterMatches(data.matches, filter) : []),
-    [data, filter],
+    () => (data ? searchMatches(filterMatches(data.matches, filter), query) : []),
+    [data, filter, query],
   );
+
+  const emptyText = query.trim() ? `Ничего не найдено по «${query.trim()}»` : EMPTY_TEXT[filter];
 
   const title = data?.round ? `Матчи тура · ${data.round}` : 'Матчи тура';
 
@@ -96,6 +112,16 @@ export function MatchesScreen() {
 
       {error && <Text style={styles.errorText}>Не удалось обновить: {error}</Text>}
 
+      <TextInput
+        style={styles.search}
+        value={query}
+        onChangeText={setQuery}
+        placeholder="Поиск по названию клуба"
+        placeholderTextColor="#9ca3af"
+        autoCorrect={false}
+        clearButtonMode="while-editing"
+      />
+
       <View style={styles.filters}>
         {FILTERS.map((f) => (
           <Pressable
@@ -122,7 +148,7 @@ export function MatchesScreen() {
         contentContainerStyle={styles.list}
         refreshing={loading}
         onRefresh={load}
-        ListEmptyComponent={<Text style={styles.hint}>{EMPTY_TEXT[filter]}</Text>}
+        ListEmptyComponent={<Text style={styles.hint}>{emptyText}</Text>}
       />
     </View>
   );
@@ -168,6 +194,14 @@ const styles = StyleSheet.create({
   hint: {
     color: '#6b7280',
     textAlign: 'center',
+  },
+  search: {
+    borderWidth: 1,
+    borderColor: '#d1d5db',
+    borderRadius: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    fontSize: 15,
   },
   filters: {
     flexDirection: 'row',
