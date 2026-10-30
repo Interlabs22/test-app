@@ -3,6 +3,7 @@ import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from '
 import { fetchMatches } from '../api/matches';
 import { MatchCard } from '../components/MatchCard';
 import { UpdatedAgo } from '../components/UpdatedAgo';
+import { useFavorites } from '../hooks/useFavorites';
 import type { MatchesResponse } from '../types/match';
 import { FILTER_LABELS, filterMatches, type MatchFilter } from '../utils/matchFormat';
 
@@ -22,6 +23,7 @@ export function MatchesScreen() {
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<MatchFilter>('all');
   const abortRef = useRef<AbortController | null>(null);
+  const { favorites, isFavorite, toggle } = useFavorites();
 
   const load = useCallback(async () => {
     // Новый запрос отменяет предыдущий, чтобы старый ответ не перезаписал свежий.
@@ -113,7 +115,10 @@ export function MatchesScreen() {
       <FlatList
         data={visibleMatches}
         keyExtractor={(m) => m.id}
-        renderItem={({ item }) => <MatchCard match={item} />}
+        extraData={favorites}
+        renderItem={({ item }) => (
+          <MatchCard match={item} isFavorite={isFavorite(item.id)} onToggleFavorite={toggle} />
+        )}
         contentContainerStyle={styles.list}
         refreshing={loading}
         onRefresh={load}
